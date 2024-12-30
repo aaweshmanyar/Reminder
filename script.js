@@ -21,12 +21,13 @@ document.getElementById('startButton').addEventListener('click', () => {
     // Enable notifications
     requestNotificationPermission();
 
-    // Wait until start time to begin notifications
+    // Wait until the start time to begin notifications
     const delay = start - now.getTime();
     setTimeout(() => {
         sendNotifications(interval, text);
     }, delay);
 
+    // Disable Start button and enable Stop button
     document.getElementById('startButton').disabled = true;
     document.getElementById('endButton').disabled = false;
 });
@@ -46,7 +47,11 @@ function convertTimeToMilliseconds(time) {
 
 function sendNotifications(interval, text) {
     reminderInterval = setInterval(() => {
-        new Notification("Reminder!", { body: text });
+        if (Notification.permission === "granted") {
+            new Notification("Reminder!", { body: text });
+        } else {
+            console.error("Notification permission not granted.");
+        }
     }, interval * 1000);
 }
 
@@ -54,7 +59,7 @@ function requestNotificationPermission() {
     if (Notification.permission === "default") {
         Notification.requestPermission().then(permission => {
             if (permission !== "granted") {
-                alert("Notifications are blocked. Please enable them in your browser.");
+                alert("Notifications are blocked. Please enable them in your browser settings.");
             }
         });
     } else if (Notification.permission === "denied") {

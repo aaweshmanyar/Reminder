@@ -1,10 +1,13 @@
 // Register the service worker
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(function (registration) {
-        console.log('Service Worker registered successfully:', registration);
-    }).catch(function (error) {
-        console.error('Service Worker registration failed:', error);
-    });
+    navigator.serviceWorker
+        .register('sw.js')
+        .then(registration => {
+            console.log('Service Worker registered successfully:', registration);
+        })
+        .catch(error => {
+            console.error('Service Worker registration failed:', error);
+        });
 }
 
 // Variables
@@ -16,8 +19,8 @@ document.getElementById('startButton').addEventListener('click', () => {
     const startTime = document.getElementById('start').value;
     const interval = parseInt(document.getElementById('interval').value, 10);
 
-    if (!text || !startTime || !interval) {
-        alert("Please fill out all fields!");
+    if (!text || !startTime || isNaN(interval) || interval <= 0) {
+        alert("Please fill out all fields correctly!");
         return;
     }
 
@@ -30,16 +33,21 @@ document.getElementById('startButton').addEventListener('click', () => {
     }
 
     // Request notification permission
-    requestNotificationPermission();
+    requestNotificationPermission().then(permission => {
+        if (permission !== 'granted') {
+            alert("Notifications are blocked. Please enable them in your browser.");
+            return;
+        }
 
-    // Wait until start time to begin notifications
-    const delay = start - now.getTime();
-    setTimeout(() => {
-        sendNotifications(interval, text);
-    }, delay);
+        // Wait until start time to begin notifications
+        const delay = start - now.getTime();
+        setTimeout(() => {
+            sendNotifications(interval, text);
+        }, delay);
 
-    document.getElementById('startButton').disabled = true;
-    document.getElementById('endButton').disabled = false;
+        document.getElementById('startButton').disabled = true;
+        document.getElementById('endButton').disabled = false;
+    });
 });
 
 // Stop reminder
@@ -73,13 +81,5 @@ function sendNotifications(interval, text) {
 
 // Request notification permission
 function requestNotificationPermission() {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission !== 'granted') {
-                alert("Notifications are blocked. Please enable them in your browser.");
-            }
-        });
-    } else {
-        alert("Your browser does not support notifications.");
-    }
+    return Notification.requestPermission();
 }
